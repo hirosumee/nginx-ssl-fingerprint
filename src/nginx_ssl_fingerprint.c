@@ -7,6 +7,14 @@
 
 #include <nginx_ssl_fingerprint.h>
 
+#include <openssl/ssl.h>
+
+/* Global hook for JA4 callback chaining.  Strong definition lives in the
+ * nginx patch (ngx_event_openssl.c).  This weak fallback provides the symbol
+ * when OpenResty rebuilds nginx core from clean (unpatched) source. */
+__attribute__((weak))
+int (*ngx_ssl_fp_extra_client_hello_cb)(SSL *s, int *al, void *arg) = NULL;
+
 #define IS_GREASE_CODE(code) (((code)&0x0f0f) == 0x0a0a && ((code)&0xff) == ((code)>>8))
 
 static inline
