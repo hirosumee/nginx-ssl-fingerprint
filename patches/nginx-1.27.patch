@@ -46,6 +46,12 @@ index 2f68a55de..d069b72ea 100644
 +        ja->data = NULL;
 +    }
 +
++    /* Chain to previous callback (e.g. ja4-nginx-module, OpenResty lua) */
++    if (c->ssl->fp_prev_client_hello_cb) {
++        return c->ssl->fp_prev_client_hello_cb(s, al,
++                                               c->ssl->fp_prev_client_hello_arg);
++    }
++
 +    return SSL_CLIENT_HELLO_SUCCESS;
 +}
  
@@ -55,6 +61,11 @@ index 2f68a55de..d069b72ea 100644
  
      ngx_ssl_clear_error(c->log);
  
++    /* Save previous client_hello callback (ja4-nginx-module, OpenResty lua) */
++    SSL_CTX_get_client_hello_cb(c->ssl->session_ctx,
++                                &c->ssl->fp_prev_client_hello_cb,
++                                &c->ssl->fp_prev_client_hello_arg);
++
 +    (void) SSL_CTX_set_client_hello_cb(c->ssl->session_ctx,
 +                                ngx_ssl_client_hello_ja3_cb, c);
 +
@@ -74,6 +85,10 @@ index 42a01ce62..c4adc270d 100644
 +    ngx_str_t                   fp_ja3_str;
 +    ngx_str_t                   fp_ja3_hash;
 +    uint16_t                    fp_tls_greased;
++
++    /* Saved previous client_hello callback for chaining (ja4, lua, etc.) */
++    int                       (*fp_prev_client_hello_cb)(SSL *, int *, void *);
++    void                       *fp_prev_client_hello_arg;
  };
  
  
